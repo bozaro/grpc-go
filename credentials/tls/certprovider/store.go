@@ -167,7 +167,7 @@ func (bc *BuildableConfig) Build(opts BuildOptions) (Provider, error) {
 	}
 	provStore.providers[sk] = wp
 	XLogger.Warningf("build wrapped provider: %p", wp)
-	return wp, nil
+	return &wrappedProviderCloser{wp: wp}, nil
 }
 
 // String returns the provider name and config as a colon separated string.
