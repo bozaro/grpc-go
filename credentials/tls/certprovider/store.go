@@ -19,8 +19,10 @@
 package certprovider
 
 import (
+	"context"
 	"fmt"
 	"google.golang.org/grpc/grpclog"
+	"runtime/debug"
 	"sync"
 )
 
@@ -56,6 +58,13 @@ type wrappedProvider struct {
 	store    *store
 }
 
+// wrappedProviderCloser wraps a provider instance with a reference count to avoid double
+// close still in use provider error.
+type wrappedProviderCloser struct {
+	mu sync.RWMutex
+	wp *wrappedProvider
+}
+
 // store is a collection of provider instances, safe for concurrent access.
 type store struct {
 	mu        sync.Mutex
@@ -78,6 +87,31 @@ func (wp *wrappedProvider) Close() {
 		wp.Provider.Close()
 		delete(ps.providers, wp.storeKey)
 	}
+}
+
+// Close overrides the Close method of the embedded provider to avoid release the
+// already released reference.
+func (w *wrappedProviderCloser) Close() {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if wp := w.wp; wp != nil {
+		w.wp = nil
+		wp.Close()
+	} else {
+		XLogger.Warningf("double close of wrapped provider: %p, %s", wp, debug.Stack())
+	}
+}
+
+// KeyMaterial returns the key material sourced by the Provider.
+// Callers are expected to use the returned value as read-only.
+func (w *wrappedProviderCloser) KeyMaterial(ctx context.Context) (*KeyMaterial, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	if w.wp != nil {
+		return nil, errProviderClosed
+	}
+	return w.wp.KeyMaterial(ctx)
 }
 
 // BuildableConfig wraps parsed provider configuration and functionality to
