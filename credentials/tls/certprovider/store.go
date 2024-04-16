@@ -80,10 +80,10 @@ func (wp *wrappedProvider) Close() {
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 
-	XLogger.Warningf("dec wrapped provider: %p (%d -> %d)", wp, wp.refCount, wp.refCount-1)
+	//XLogger.Warningf("dec wrapped provider: %p (%d -> %d)", wp, wp.refCount, wp.refCount-1)
 	wp.refCount--
 	if wp.refCount == 0 {
-		XLogger.Warningf("close wrapped provider: %p", wp)
+		//XLogger.Warningf("close wrapped provider: %p", wp)
 		wp.Provider.Close()
 		delete(ps.providers, wp.storeKey)
 	}
@@ -150,7 +150,7 @@ func (bc *BuildableConfig) Build(opts BuildOptions) (Provider, error) {
 		opts:   opts,
 	}
 	if wp, ok := provStore.providers[sk]; ok {
-		XLogger.Warningf("inc wrapped provider: %p (%d -> %d)", wp, wp.refCount, wp.refCount+1)
+		//XLogger.Warningf("inc wrapped provider: %p (%d -> %d)", wp, wp.refCount, wp.refCount+1)
 		wp.refCount++
 		return wp, nil
 	}
@@ -166,7 +166,7 @@ func (bc *BuildableConfig) Build(opts BuildOptions) (Provider, error) {
 		store:    provStore,
 	}
 	provStore.providers[sk] = wp
-	XLogger.Warningf("build wrapped provider: %p", wp)
+	//XLogger.Warningf("build wrapped provider: %p", wp)
 	return &wrappedProviderCloser{wp: wp}, nil
 }
 
