@@ -108,7 +108,7 @@ func (w *wrappedProviderCloser) KeyMaterial(ctx context.Context) (*KeyMaterial, 
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
-	if w.wp != nil {
+	if w.wp == nil {
 		return nil, errProviderClosed
 	}
 	return w.wp.KeyMaterial(ctx)
