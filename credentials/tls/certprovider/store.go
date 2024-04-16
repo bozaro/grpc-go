@@ -152,7 +152,7 @@ func (bc *BuildableConfig) Build(opts BuildOptions) (Provider, error) {
 	if wp, ok := provStore.providers[sk]; ok {
 		//XLogger.Warningf("inc wrapped provider: %p (%d -> %d)", wp, wp.refCount, wp.refCount+1)
 		wp.refCount++
-		return wp, nil
+		return &wrappedProviderCloser{wp: wp}, nil
 	}
 
 	provider := bc.starter(opts)
