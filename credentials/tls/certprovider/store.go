@@ -62,6 +62,7 @@ func (c closedProvider) KeyMaterial(ctx context.Context) (*KeyMaterial, error) {
 }
 
 func (c closedProvider) Close() {
+	panic("Close called more than once on certificate provider")
 }
 
 // singleCloseWrappedProvider wraps a provider instance with a reference count to avoid double
