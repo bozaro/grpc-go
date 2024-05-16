@@ -34,6 +34,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"google.golang.org/grpc/credentials/tls/certprovider"
@@ -130,6 +131,7 @@ type watcher struct {
 	certFileContents    []byte
 	keyFileContents     []byte
 	rootFileContents    []byte
+	closeMark           atomic.Bool
 	cancel              context.CancelFunc
 }
 
@@ -256,5 +258,8 @@ func (w *watcher) KeyMaterial(ctx context.Context) (*certprovider.KeyMaterial, e
 
 // Close cleans up resources allocated by the watcher.
 func (w *watcher) Close() {
+	if w.closeMark.Swap(true) {
+		panic("Close called more than once on certificate provider")
+	}
 	w.cancel()
 }

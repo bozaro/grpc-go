@@ -85,6 +85,7 @@ type Provider interface {
 	KeyMaterial(ctx context.Context) (*KeyMaterial, error)
 
 	// Close cleans up resources allocated by the Provider.
+	// This method panic when called more than once.
 	Close()
 }
 

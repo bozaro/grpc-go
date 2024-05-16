@@ -303,7 +303,11 @@ func (s) TestStoreSingleProviderDifferentConfigs(t *testing.T) {
 	cfg2 := fakeConfig + "2222"
 
 	prov1 := createProvider(t, fakeProvider1Name, cfg1, opts)
-	defer prov1.Close()
+	defer func() {
+		if prov1 != nil {
+			prov1.Close()
+		}
+	}()
 	// Our fakeProviderBuilder pushes newly created providers on a channel. Grab
 	// the fake provider from that channel.
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
@@ -349,6 +353,7 @@ func (s) TestStoreSingleProviderDifferentConfigs(t *testing.T) {
 
 	// Close one of the providers and verify that the other one is not affected.
 	prov1.Close()
+	prov1 = nil
 	if err := readAndVerifyKeyMaterial(ctx, prov2, km2); err != nil {
 		t.Fatal(err)
 	}
@@ -359,7 +364,11 @@ func (s) TestStoreSingleProviderDifferentConfigs(t *testing.T) {
 func (s) TestStoreMultipleProviders(t *testing.T) {
 	opts := BuildOptions{CertName: "foo"}
 	prov1 := createProvider(t, fakeProvider1Name, fakeConfig, opts)
-	defer prov1.Close()
+	defer func() {
+		if prov1 != nil {
+			prov1.Close()
+		}
+	}()
 	// Our fakeProviderBuilder pushes newly created providers on a channel. Grab
 	// the fake provider from that channel.
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTestTimeout)
@@ -394,6 +403,7 @@ func (s) TestStoreMultipleProviders(t *testing.T) {
 
 	// Close one of the providers and verify that the other one is not affected.
 	prov1.Close()
+	prov1 = nil
 	if err := readAndVerifyKeyMaterial(ctx, prov2, km2); err != nil {
 		t.Fatal(err)
 	}
