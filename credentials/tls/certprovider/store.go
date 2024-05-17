@@ -21,6 +21,7 @@ package certprovider
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"sync"
 )
 
@@ -57,8 +58,9 @@ type wrappedProvider struct {
 // wrappedProviderCloser wraps a provider instance with a reference count to avoid double
 // close still in use provider.
 type wrappedProviderCloser struct {
-	mu sync.RWMutex
-	wp *wrappedProvider
+	mu              sync.RWMutex
+	wp              *wrappedProvider
+	firstCloseTrace []byte
 }
 
 // store is a collection of provider instances, safe for concurrent access.
@@ -90,7 +92,10 @@ func (w *wrappedProviderCloser) Close() {
 	defer w.mu.Unlock()
 	if wp := w.wp; wp != nil {
 		w.wp = nil
+		w.firstCloseTrace = debug.Stack()
 		wp.Close()
+	} else {
+		fmt.Printf("INFRA-6453 DETECTED DOUBLE CLOSE:\n%s\n%s\n", string(w.firstCloseTrace), string(debug.Stack()))
 	}
 }
 
